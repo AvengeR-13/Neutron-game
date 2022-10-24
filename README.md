@@ -12,6 +12,6 @@
 <p>3.Play begins with one player moving a piece from the home row. Thereafter on each turn, a player moves first the neutron and then one of his or her pieces.</p>
 <p>4.The object of the game is to move the neutron into your home row, cause your opponent to move the neutron into your home row, or to block the neutron completely so your opponent can't move it.</p>
 
-<h4>Game complexity:  80<sup>7</sup>,</h4><br> 
-where 80 - branching factor,
+<h4>Game complexity:  80<sup>7</sup></h4><br> 
+Where 80 - branching factor and
 7 - depth
