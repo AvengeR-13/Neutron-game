@@ -1,5 +1,6 @@
-import {Pawn} from '/src/Pawn.js'
-import {Game} from '/src/Game.js'
+import {Pawn} from './Pawn.js'
+import {Game} from './Game.js'
+import {AI} from './AI.js'
 
 /**
  * Klasa odpowiedzialna za wszystkie operacje wykonywane na froncie
@@ -9,6 +10,7 @@ export class GameBoard {
     /**
      *  Deklaracja fieldów klasy GameBoard
      */
+    gameMode
     game
     board = [
         [
@@ -32,11 +34,13 @@ export class GameBoard {
     /**
      * Konstruktor tworzy planszę, przypisuje grafiki pionkom i tworzy instancje klasy Game (czyli backendu gry)
      */
-    constructor() {
+    constructor(gameMode) {
+        this.gameMode = gameMode
+        this.game = new Game(this, this.gameMode)
         this.#createBoard()
         this.#createPawns()
 
-        this.game = new Game(this.board)
+        return this
     }
 
     /**
@@ -57,7 +61,7 @@ export class GameBoard {
             this.#clearMoveSelection()
             this.#clearField(previousField)
             this.#setNewPawnLocation(field, pawn)
-            this.#toggleRound()
+            this.toggleRound()
         }
     };
 
@@ -75,29 +79,39 @@ export class GameBoard {
     /**
      * Przełączanie tury
      */
-    #toggleRound() {
+    toggleRound() {
         this.#isWinningConditionMatched()
 
+        document.querySelector('#roundCount').innerText = `Round: ${this.game.rounds}`
         this.game.swapPlayers()
-        document.querySelector('#turn').innerText = `${this.game.currentPlayer}'s turn`
 
+        if (this.game.currentPlayer instanceof AI) {
+            document.querySelector('#turn').innerText = `${this.game.currentPlayer.player}'s turn`
+        } else {
+            document.querySelector('#turn').innerText = `${this.game.currentPlayer}'s turn`
+        }
         this.game.isNeutronMove
-            ? document.querySelector('#isNeutron').innerText = 'NEUTRON MOVE!'
-            : document.querySelector('#isNeutron').innerText = ''
+            ? document.querySelector('#isNeutron').style.visibility = 'visible'
+            : document.querySelector('#isNeutron').style.visibility = 'hidden'
     }
 
-    #isWinningConditionMatched()
-    {
+    /**
+     * Funkcja sprawdzająca, czy któryś z graczy wygrał
+     */
+    #isWinningConditionMatched() {
         const result = this.game.isGameOver()
-        if (result.win) Swal.fire({
-            title: 'Game Over!',
-            html: `<b>Winner: ${result.winner}</b>`,
-            confirmButtonText: '<b>Restart</b>'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                location.reload()
-            }
-        })
+        if (result.win)  {
+            Swal.fire({
+                title: 'Game Over!',
+                html: `<style="fontsize: 30px">Winner: <b>${result.winner}</b> in <b>${this.game.rounds}</b> rounds.</style>`,
+                confirmButtonText: '<b>Try again</b>',
+                allowOutsideClick: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload()
+                }
+            })
+        }
     }
 
     /**
@@ -111,7 +125,6 @@ export class GameBoard {
             field.removeEventListener('click', this.#showPossibleMovement)
         }
     }
-
 
     /**
      * Przypisanie pionka do nowego pola na planszy (frontend)
@@ -158,7 +171,9 @@ export class GameBoard {
      *  Proceduralne tworzenie planszy na froncie
      */
     #createBoard() {
-        let boardElement = document.getElementById('gameBoard')
+        let boardElement = document.querySelector('#gameBoard')
+        boardElement.classList.remove('hidden')
+        document.querySelector('#gameInfo').classList.remove('hidden')
         let rowCount = 0
         this.board.forEach(row => {
             let boardRow = document.createElement('ul')
@@ -172,8 +187,15 @@ export class GameBoard {
                 boardField.setAttribute('id',`f${rowCount}0${fieldCount}`)
 
                 if (field instanceof Pawn) {
-                    boardField.innerText = field.player
-                    boardField.addEventListener('click', this.#showPossibleMovement, false)
+                    if (this.gameMode === Game.gameModeEnums.PVP) {
+                        boardField.innerText = field.player
+                        boardField.addEventListener('click', this.#showPossibleMovement, false)
+                    } else if (this.gameMode === Game.gameModeEnums.PVE && !(this.game.currentPlayer instanceof AI)) {
+                        boardField.innerText = field.player
+                        boardField.addEventListener('click', this.#showPossibleMovement, false)
+                    } else {
+                        boardField.innerText = field.player
+                    }
                 }
                 boardRow.appendChild(boardField)
                 fieldCount ++
@@ -181,6 +203,14 @@ export class GameBoard {
             boardElement.appendChild(boardRow)
             rowCount ++
         })
+    }
+
+    updateBoard() {
+        this.#isWinningConditionMatched()
+        document.querySelector('#roundCount').innerText = `Round: ${this.game.rounds}`
+        document.querySelector('#gameBoard').innerHTML = ''
+        this.#createBoard()
+        this.#createPawns()
     }
 
     /**
@@ -195,6 +225,8 @@ export class GameBoard {
         const pawnAffiliation = field.innerText
 
         this.#clearMoveSelection()
+
+        console.log(pawnAffiliation)
 
         if (this.game.isNeutronMove) {
             if (pawnAffiliation !== 'Neutron') return
