@@ -1,4 +1,5 @@
-import {Pawn} from '/src/Pawn.js'
+import {Pawn} from './Pawn.js'
+import {AI} from './AI.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
@@ -10,13 +11,47 @@ export class Game {
      *Deklaracja fieldów klasy Game
      */
     gameBoard
+    boardClass
     selectedPawn
     currentPlayer = 'White'
     isNeutronMove = false
-    playedRounds = 1
+    gameMode
+    player1
+    player2
+    gameOver = false
+    rounds = 1
 
-    constructor(board) {
-        this.gameBoard = board
+    static gameModeEnums = {
+        PVP: 'PvP',
+        PVE: 'PvE',
+        EVE: 'EvE'
+    }
+
+    static playerEnums = {
+        WHITE: 'White',
+        BLACK: 'Black'
+    }
+
+    constructor(board, gameMode) {
+        this.boardClass = board
+        this.gameBoard = board.board
+        this.gameMode = gameMode
+
+        if (this.gameMode === Game.gameModeEnums.PVE) {
+            this.player1 = this.currentPlayer
+            this.player2 = new AI(this.gameBoard, this, Game.playerEnums.BLACK)
+        } else if (this.gameMode === Game.gameModeEnums.EVE) {
+            this.player1 = new AI(this.gameBoard, this, Game.playerEnums.WHITE)
+            this.player2 = new AI(this.gameBoard, this, Game.playerEnums.BLACK)
+            this.currentPlayer = this.player1
+            this.player1.makeMove()
+            this.swapPlayers()
+        } else  {
+            this.player1 = this.currentPlayer
+            this.player2 = Game.playerEnums.BLACK
+        }
+
+        return this
     }
 
     choosePawn(pawnX, pawnY)
@@ -44,16 +79,30 @@ export class Game {
             console.log('Exception: ' + e)
             return false
         }
-        // console.log(this.gameBoard)
         return true
     }
 
     swapPlayers() {
-        if (this.isNeutronMove) {
-            this.isNeutronMove = false
-        } else {
-            this.isNeutronMove = true
-            this.currentPlayer = (this.currentPlayer === "White") ? "Black" : "White"
+        if (!this.gameOver) {
+            if (this.isNeutronMove) {
+                this.isNeutronMove = false
+            } else {
+                this.isNeutronMove = true
+                this.currentPlayer = (this.currentPlayer === this.player1) ? this.player2 : this.player1
+                ++this.rounds
+            }
+            if (this.currentPlayer instanceof AI) {
+                let promise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve(this.currentPlayer.makeMove())
+                    }, 1000)
+                }).then(() => {
+                    this.boardClass.toggleRound()
+                    this.boardClass.updateBoard()
+                }).catch(() => {
+                    console.log('Error')
+                })
+            }
         }
     }
 
@@ -62,20 +111,25 @@ export class Game {
     }
 
     isGameOver() {
-        let neutron = this.#findNeutron()
-        console.log(neutron.y)
+        let neutron = this.findNeutron()
 
-        console.log(this.#isPawnMovable(neutron))
-
-        if (!this.#isPawnMovable(neutron)) return {win: true, winner: this.currentPlayer}
-        if (neutron.y === 0) return {win: true, winner: "White"}
-        if (neutron.y === 4) return {win: true, winner: "Black"}
+        if (!this.#isPawnMovable(neutron)) {
+            this.gameOver = true
+            return {win: true, winner: this.currentPlayer}
+        }
+        if (neutron.y === 0) {
+            this.gameOver = true
+            return {win: true, winner: "White"}
+        }
+        if (neutron.y === 4) {
+            this.gameOver = true
+            return {win: true, winner: "Black"}
+        }
 
         return {win: false}
     }
 
-    #findNeutron()
-    {
+    findNeutron() {
         let neutron
         this.gameBoard.forEach(row => {
             row.filter(function (element, index, arr) {
@@ -89,42 +143,42 @@ export class Game {
 
     #isPawnMovableN(pawn) {
         //N direction
-        if( (pawn.x-1 >= 0) && this.gameBoard[pawn.x-1][pawn.y] == null) return true;
+        if( (pawn.y-1 >= 0) && this.gameBoard[pawn.y-1][pawn.x] == null) return true;
     }
 
     #isPawnMovableNE(pawn) {
         //NE direction
-        if( (pawn.x-1 >= 0 && pawn.y+1 <5) && this.gameBoard[pawn.x-1][pawn.y+1] == null) return true;
+        if( (pawn.y-1 >= 0 && pawn.x+1 <5) && this.gameBoard[pawn.y-1][pawn.x+1] == null) return true;
     }
 
     #isPawnMovableE(pawn) {
         //E direction
-        if( (pawn.y+1 <5) && this.gameBoard[pawn.x][pawn.y+1] == null) return true;
+        if( (pawn.x+1 <5) && this.gameBoard[pawn.y][pawn.x+1] == null) return true;
     }
 
     #isPawnMovableSE(pawn) {
         //SE direction
-        if( (pawn.x+1 <5 && pawn.y+1 <=4) && this.gameBoard[pawn.x+1][pawn.y+1] == null) return true;
+        if( (pawn.y+1 <5 && pawn.x+1 <=4) && this.gameBoard[pawn.y+1][pawn.x+1] == null) return true;
     }
 
     #isPawnMovableS(pawn) {
         //S direction
-        if( (pawn.x+1 <5) && this.gameBoard[pawn.x+1][pawn.y] == null) return true;
+        if( (pawn.y+1 <5) && this.gameBoard[pawn.y+1][pawn.x] == null) return true;
     }
 
     #isPawnMovableSW(pawn) {
         //SW direction
-        if( (pawn.x+1 <5 && pawn.y-1 >=0) && this.gameBoard[pawn.x+1][pawn.y-1] == null) return true;
+        if( (pawn.y+1 <5 && pawn.x-1 >=0) && this.gameBoard[pawn.y+1][pawn.x-1] == null) return true;
     }
 
     #isPawnMovableW(pawn) {
         //W direction
-        if( (pawn.y-1 >=0) && this.gameBoard[pawn.x][pawn.y-1] == null) return true;
+        if( (pawn.x-1 >=0) && this.gameBoard[pawn.y][pawn.x-1] == null) return true;
     }
 
     #isPawnMovableNW(pawn) {
         //NW direction
-        if( (pawn.x-1 >= 0 && pawn.y-1 >=0) && this.gameBoard[pawn.x-1][pawn.y-1] == null) return true
+        if( (pawn.y-1 >= 0 && pawn.x-1 >=0) && this.gameBoard[pawn.y-1][pawn.x-1] == null) return true
     }
 
     #isPawnMovable(pawn) {
@@ -154,180 +208,7 @@ export class Game {
 
         return false
     }
-
-    /*#getAvailableMoves(pawn) {
-        let availableMoves = [];
-        if(isPawnMovableN(pawn)) availableMoves.push("N");
-        if(isPawnMovableNE(pawn)) availableMoves.push("NE");
-        if(isPawnMovableE(pawn)) availableMoves.push("E");
-        if(isPawnMovableSE(pawn)) availableMoves.push("SE");
-        if(isPawnMovableS(pawn)) availableMoves.push("S");
-        if(isPawnMovableSW(pawn)) availableMoves.push("SW");
-        if(isPawnMovableW(pawn)) availableMoves.push("W");
-        if(isPawnMovableNW(pawn)) availableMoves.push("NW");
-        return availableMoves;
-    }*/
 }
-
-
-
-function findPlayerPawns(player) {
-    let playerPawns=[];
-    for(let i=0; i<5; ++i) {
-        playerPawns = playerPawns.concat(this.gameBoard[i].filter(function(element, index, arr){
-            return element != null && (element.player === this)},player))
-    }
-
-    return playerPawns;
-}
-
-function findMovablePawns(pawns) {
-    return pawns.filter(function(element, index, arr){
-        return isPawnMovable(element)});
-}
-function choosePawnToMove(pawns) {
-    return pawns[Math.floor(Math.random() * pawns.length)];
-}
-
-
-
-// function getAvailableMoves(pawn) {
-//     let availableMoves = [];
-//     if(isPawnMovableN(pawn)) availableMoves.push("N");
-//     if(isPawnMovableNE(pawn)) availableMoves.push("NE");
-//     if(isPawnMovableE(pawn)) availableMoves.push("E");
-//     if(isPawnMovableSE(pawn)) availableMoves.push("SE");
-//     if(isPawnMovableS(pawn)) availableMoves.push("S");
-//     if(isPawnMovableSW(pawn)) availableMoves.push("SW");
-//     if(isPawnMovableW(pawn)) availableMoves.push("W");
-//     if(isPawnMovableNW(pawn)) availableMoves.push("NW");
-//     return availableMoves;
-// }
-
-function chooseMove(moves) {
-    return moves[Math.floor(Math.random() * moves.length)];
-}
-
-// function isPawnMovableN(pawn) {
-//     //N direction
-//     if( (pawn.x-1 >= 0) && this.gameBoard[pawn.x-1][pawn.y] == null) return true;
-// }
-//
-// function isPawnMovableNE(pawn) {
-//     //NE direction
-//     if( (pawn.x-1 >= 0 && pawn.y+1 <5) && this.gameBoard[pawn.x-1][pawn.y+1] == null) return true;
-// }
-//
-// function isPawnMovableE(pawn) {
-//     //E direction
-//     if( (pawn.y+1 <5) && this.gameBoard[pawn.x][pawn.y+1] == null) return true;
-// }
-//
-// function isPawnMovableSE(pawn) {
-//     //SE direction
-//     if( (pawn.x+1 <5 && pawn.y+1 <=4) && this.gameBoard[pawn.x+1][pawn.y+1] == null) return true;
-// }
-//
-// function isPawnMovableS(pawn) {
-//     //S direction
-//     if( (pawn.x+1 <5) && this.gameBoard[pawn.x+1][pawn.y] == null) return true;
-// }
-//
-// function isPawnMovableSW(pawn) {
-//     //SW direction
-//     if( (pawn.x+1 <5 && pawn.y-1 >=0) && this.gameBoard[pawn.x+1][pawn.y-1] == null) return true;
-// }
-//
-// function isPawnMovableW(pawn) {
-//     //W direction
-//     if( (pawn.y-1 >=0) && this.gameBoard[pawn.x][pawn.y-1] == null) return true;
-// }
-//
-// function isPawnMovableNW(pawn) {
-//     //NW direction
-//     if( (pawn.x-1 >= 0 && pawn.y-1 >=0) && this.gameBoard[pawn.x-1][pawn.y-1] == null) return true
-// }
-//
-// function isPawnMovable(pawn) {
-//     //N direction
-//     if(isPawnMovableN(pawn)) return true;
-//
-//     //NE direction
-//     if(isPawnMovableNE(pawn)) return true;
-//
-//     //E direction
-//     if(isPawnMovableE(pawn)) return true;
-//
-//     //SE direction
-//     if(isPawnMovableSE(pawn)) return true;
-//
-//     //S direction
-//     if(isPawnMovableS(pawn)) return true;
-//
-//     //SW direction
-//     if(isPawnMovableSW(pawn)) return true;
-//
-//     //W direction
-//     if(isPawnMovableW(pawn)) return true;
-//
-//     //NW direction
-//     if(isPawnMovableNW(pawn)) return true;
-//
-//     return false
-// }
-
-// movePawn(pawn, direction) {
-//     this.clearPlace(pawn.x,pawn.y);
-//     switch(direction) {
-//         case "N":
-//             while(isPawnMovableN(pawn)) {
-//                 --pawn.x;
-//             }
-//             break;
-//         case "NE":
-//             while(isPawnMovableNE(pawn)) {
-//                 --pawn.x;
-//                 ++pawn.y;
-//             }
-//             break;
-//         case "E":
-//             while(isPawnMovableE(pawn)) {
-//                 ++pawn.y;
-//             }
-//             break;
-//         case "SE":
-//             while(isPawnMovableSE(pawn)) {
-//                 ++pawn.y;
-//                 ++pawn.x;
-//             }
-//             break;
-//         case "S":
-//             while(isPawnMovableS(pawn)) {
-//                 ++pawn.x;
-//             }
-//             break;
-//         case "SW":
-//             while(isPawnMovableSW(pawn)) {
-//                 ++pawn.x;
-//                 --pawn.y
-//             }
-//             break;
-//         case "W":
-//             while(isPawnMovableW(pawn)) {
-//                 --pawn.y;
-//             }
-//             break;
-//         case "NW":
-//             while(isPawnMovableNW(pawn)) {
-//                 --pawn.x;
-//                 --pawn.y
-//             }
-//             break;
-//     }
-//     this.gameBoard[pawn.x][pawn.y] = pawn;
-//
-//     console.log(this.gameBoard)
-// }
 
 
 

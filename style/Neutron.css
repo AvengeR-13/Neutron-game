@@ -7,6 +7,8 @@ body {
     display: grid;
     place-items: center;
     overflow-x: hidden;
+    text-align: center !important;
+
     font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -17,6 +19,7 @@ h1 {
 ul {
     display: grid;
     grid-template-columns: 1fr;
+    margin-bottom: 0 !important;
 }
 
 li {
@@ -24,6 +27,10 @@ li {
     display: grid;
     place-items: center;
     font-size: 0;
+}
+
+.hidden {
+    display: none;
 }
 
 .board-row {
@@ -49,4 +56,15 @@ li {
 
 #turn {
     margin: 10px 0;
+}
+
+.btn-menu {
+    width: 12em;
+    height: 3em;
+    font-weight: 600 !important;
+    color: #ffffff;
+    background-color: rgb(100, 100, 100);
+    -webkit-box-shadow: 3px 3px 2px 0 rgb(0, 157, 245);
+    -moz-box-shadow: 3px 3px 2px 0 rgba(224, 54, 54, 1);
+    box-shadow: 3px 3px 2px 0 rgba(224, 54, 54, 1);
 }

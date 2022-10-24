@@ -1,31 +1,24 @@
 import {Pawn} from '/src/Pawn.js'
-import {GameBoard} from '/src/GameBoard.js'
 import {Game} from '/src/Game.js'
+import {AI} from '/src/AI.js';
+import {GameBoard} from '/src/GameBoard.js'
 
-// CODE FOR TESTING
-const gameBoard = new GameBoard();
+/**
+ * Funkcja uruchamiająca grę
+ */
+const startGame = (event) => {
+    let gameMode = event.target.id
+    document.querySelectorAll('button').forEach(button => {
+        button.removeEventListener('click', startGame)
+    })
+    document.querySelector('#menu').classList.add('hidden')
 
-//console.log(gameBoard);
-var currentPlayer = "White";
+    new GameBoard(gameMode);
+};
 
-// var pawn = (choosePawnToMove(findMovablePawns(findPlayerPawns(currentPlayer))));
-// console.log(getAvailableMoves(pawn))
-// Game.movePawn(pawn,chooseMove(getAvailableMoves(pawn)));
-// isGameOver();
-// console.log(...gameBoard);
-// console.log("nowa runda");
-// swapPlayers();
-// pawn = (choosePawnToMove(findMovablePawns(findPlayerPawns("Neutron"))));
-// Game.movePawn(pawn,chooseMove(getAvailableMoves(pawn)));
-// isGameOver();
-// console.log(...gameBoard);
-// pawn = (choosePawnToMove(findMovablePawns(findPlayerPawns(currentPlayer))));
-// Game.movePawn(pawn,chooseMove(getAvailableMoves(pawn)));
-// isGameOver();
-// console.log(...gameBoard);
-// console.log("nowa runda");
-// swapPlayers();
+window.onload = () => {
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', startGame)
+    })
+}
 
-
-
-//console.log(gameBoard);
