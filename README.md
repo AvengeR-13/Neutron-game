@@ -3,7 +3,7 @@
 
 <h3>How to run:</h3>
 <p>1. Double-click on "Neutron.html"</p>
-<p>2. Choose the game mode you are interested in"</p>
+<p>2. Choose the game mode you are interested in</p>
 <p>3. Play!</p>
 
 <h3 style=>Rules and Game Play:</h3> <br>
