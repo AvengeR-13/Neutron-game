@@ -1,6 +1,7 @@
+import {AI} from '/src/AI.js'
 import {Pawn} from '/src/Pawn.js'
 import {Game} from '/src/Game.js'
-import {AI} from '/src/AI.js';
+import {Minimax} from '/src/Minimax.js'
 import {GameBoard} from '/src/GameBoard.js'
 
 /**
@@ -21,4 +22,3 @@ window.onload = () => {
         button.addEventListener('click', startGame)
     })
 }
-

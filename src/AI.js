@@ -1,6 +1,3 @@
-import {Game} from "./Game.js"
-import {GameBoard} from "./GameBoard.js";
-import {Pawn} from "./Pawn.js";
 /**
  * Klasa sztucznej inteligencji, odpowiadająca za rozgrywanie tury przez komputer
  */
