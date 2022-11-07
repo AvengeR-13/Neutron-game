@@ -1,11 +1,11 @@
 import {Pawn} from './Pawn.js'
 import {AI} from './AI.js'
+import {Minimax} from './Minimax.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
  */
 export class Game {
-
 
     /**
      *Deklaracja fieldów klasy Game
@@ -39,10 +39,10 @@ export class Game {
 
         if (this.gameMode === Game.gameModeEnums.PVE) {
             this.player1 = this.currentPlayer
-            this.player2 = new AI(this.gameBoard, this, Game.playerEnums.BLACK)
+            this.player2 = new Minimax(this.gameBoard, this, Game.playerEnums.BLACK)
         } else if (this.gameMode === Game.gameModeEnums.EVE) {
             this.player1 = new AI(this.gameBoard, this, Game.playerEnums.WHITE)
-            this.player2 = new AI(this.gameBoard, this, Game.playerEnums.BLACK)
+            this.player2 = new Minimax(this.gameBoard, this, Game.playerEnums.BLACK)
             this.currentPlayer = this.player1
             this.player1.makeMove()
             this.swapPlayers()
