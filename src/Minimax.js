@@ -4,7 +4,6 @@ import {Pawn} from './Pawn.js';
 export class Minimax extends AI {
 
     makeMove() {
-        
         if (this.game.isNeutronMove) {
             try {
                 let bestMove = this.minimax(this.gameBoard, 2, true, null)
@@ -24,7 +23,7 @@ export class Minimax extends AI {
                 console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
                 return false
             }
-        } 
+        }
     }
 
     evaluate(gameBoard) {
@@ -125,7 +124,7 @@ export class Minimax extends AI {
             if(depth == 2) console.log(scoreArray);
             return testArray[scoreArray.indexOf(Math.min(...scoreArray))];
         }
-        
+
     }
 
     getAvailableMoves(pawn, gameBoard) {

@@ -33,6 +33,34 @@ li {
     display: none;
 }
 
+.algorithm-select-label {
+    font-size: large;
+    font-weight: 600 !important;
+    text-align: center;
+}
+
+.algorithm-select {
+    width: 12em;
+    font-weight: 600;
+    text-align: center;
+    color: #ffffff;
+    background-color: rgb(100, 100, 100);
+    -webkit-box-shadow: 3px 3px 2px 0 rgb(0, 157, 245);
+    -moz-box-shadow: 3px 3px 2px 0 rgba(224, 54, 54, 1);
+    box-shadow: 3px 3px 2px 0 rgba(224, 54, 54, 1);
+    height: 2.5em;
+    cursor: pointer;
+}
+
+.algorithm-select-option {
+    font-weight: inherit;
+}
+
+.algorithm-select-disabled-option {
+    font-weight: inherit;
+    color: rgba(193, 193, 193, 0.76);
+}
+
 .board-row {
     display: flex;
 }

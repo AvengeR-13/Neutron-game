@@ -35,9 +35,9 @@ export class GameBoard {
     /**
      * Konstruktor tworzy planszę, przypisuje grafiki pionkom i tworzy instancje klasy Game (czyli backendu gry)
      */
-    constructor(gameMode) {
+    constructor(gameMode, algorithm) {
         this.gameMode = gameMode
-        this.game = new Game(this, this.gameMode)
+        this.game = new Game(this, this.gameMode, algorithm)
         this.#createBoard()
         this.#createPawns()
 
