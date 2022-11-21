@@ -3,8 +3,12 @@
 
 <h3>How to run:</h3>
 <p>1. Double-click on "Neutron.html"</p>
-<p>2. Choose the game mode you are interested in"</p>
+<p>2. Choose the game mode and AI algorithm* you are interested in"</p>
 <p>3. Play!</p>
+
+*In PvE gam mode AI algorithm applies to black pawns only. White pawns always play randomly.
+
+<h4>The AI using the algorithm wins 100/100 matches against the AI playing randomly.
 
 <h3 style="margin-bottom: 0">Rules and Game Play:</h3> <br>
 <p>1.The game starts with five white pieces on White's home row (one edge of the board), five black pieces on Black's home row, and the neutron in the center. </p>
