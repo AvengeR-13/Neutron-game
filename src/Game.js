@@ -1,6 +1,7 @@
 import {Pawn} from './Pawn.js'
 import {AI} from './AI.js'
 import {Minimax} from './Minimax.js'
+import {Negamax} from './Negamax.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
@@ -32,36 +33,49 @@ export class Game {
         BLACK: 'Black'
     }
 
-    constructor(board, gameMode) {
+    constructor(board, gameMode, algorithm) {
         this.boardClass = board
         this.gameBoard = board.board
         this.gameMode = gameMode
 
+        let AiInstance;
+        switch (algorithm) {
+            case 'random' :
+                AiInstance = new AI(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            case 'minimax':
+                AiInstance = new Minimax(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            case 'negamax':
+                AiInstance = new Negamax(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            default:
+                console.log('Something went wrong in algorithm select. Selected: ' + algorithm)
+                return
+        }
+
         if (this.gameMode === Game.gameModeEnums.PVE) {
             this.player1 = this.currentPlayer
-            this.player2 = new Minimax(this.gameBoard, this, Game.playerEnums.BLACK)
+            this.player2 = AiInstance
         } else if (this.gameMode === Game.gameModeEnums.EVE) {
             this.player1 = new AI(this.gameBoard, this, Game.playerEnums.WHITE)
-            this.player2 = new Minimax(this.gameBoard, this, Game.playerEnums.BLACK)
+            this.player2 = AiInstance
             this.currentPlayer = this.player1
-            this.player1.makeMove()
+            this.currentPlayer.makeMove()
             this.swapPlayers()
-        } else  {
+        } else {
             this.player1 = this.currentPlayer
             this.player2 = Game.playerEnums.BLACK
         }
-
         return this
     }
 
-    choosePawn(pawnX, pawnY)
-    {
+    choosePawn(pawnX, pawnY) {
         const pawn = this.gameBoard[pawnY][pawnX]
         if (pawn instanceof Pawn) this.selectedPawn = pawn
     }
 
-    clearPawnSelection()
-    {
+    clearPawnSelection() {
         this.selectedPawn = null
     }
 
@@ -106,7 +120,7 @@ export class Game {
         }
     }
 
-    clearPlace(x,y) {
+    clearPlace(x, y) {
         this.gameBoard[y][x] = null;
     }
 
@@ -143,68 +157,68 @@ export class Game {
 
     #isPawnMovableN(pawn) {
         //N direction
-        if( (pawn.y-1 >= 0) && this.gameBoard[pawn.y-1][pawn.x] == null) return true;
+        if ((pawn.y - 1 >= 0) && this.gameBoard[pawn.y - 1][pawn.x] == null) return true;
     }
 
     #isPawnMovableNE(pawn) {
         //NE direction
-        if( (pawn.y-1 >= 0 && pawn.x+1 <5) && this.gameBoard[pawn.y-1][pawn.x+1] == null) return true;
+        if ((pawn.y - 1 >= 0 && pawn.x + 1 < 5) && this.gameBoard[pawn.y - 1][pawn.x + 1] == null) return true;
     }
 
     #isPawnMovableE(pawn) {
         //E direction
-        if( (pawn.x+1 <5) && this.gameBoard[pawn.y][pawn.x+1] == null) return true;
+        if ((pawn.x + 1 < 5) && this.gameBoard[pawn.y][pawn.x + 1] == null) return true;
     }
 
     #isPawnMovableSE(pawn) {
         //SE direction
-        if( (pawn.y+1 <5 && pawn.x+1 <=4) && this.gameBoard[pawn.y+1][pawn.x+1] == null) return true;
+        if ((pawn.y + 1 < 5 && pawn.x + 1 <= 4) && this.gameBoard[pawn.y + 1][pawn.x + 1] == null) return true;
     }
 
     #isPawnMovableS(pawn) {
         //S direction
-        if( (pawn.y+1 <5) && this.gameBoard[pawn.y+1][pawn.x] == null) return true;
+        if ((pawn.y + 1 < 5) && this.gameBoard[pawn.y + 1][pawn.x] == null) return true;
     }
 
     #isPawnMovableSW(pawn) {
         //SW direction
-        if( (pawn.y+1 <5 && pawn.x-1 >=0) && this.gameBoard[pawn.y+1][pawn.x-1] == null) return true;
+        if ((pawn.y + 1 < 5 && pawn.x - 1 >= 0) && this.gameBoard[pawn.y + 1][pawn.x - 1] == null) return true;
     }
 
     #isPawnMovableW(pawn) {
         //W direction
-        if( (pawn.x-1 >=0) && this.gameBoard[pawn.y][pawn.x-1] == null) return true;
+        if ((pawn.x - 1 >= 0) && this.gameBoard[pawn.y][pawn.x - 1] == null) return true;
     }
 
     #isPawnMovableNW(pawn) {
         //NW direction
-        if( (pawn.y-1 >= 0 && pawn.x-1 >=0) && this.gameBoard[pawn.y-1][pawn.x-1] == null) return true
+        if ((pawn.y - 1 >= 0 && pawn.x - 1 >= 0) && this.gameBoard[pawn.y - 1][pawn.x - 1] == null) return true
     }
 
     #isPawnMovable(pawn) {
         //N direction
-        if(this.#isPawnMovableN(pawn)) return true;
+        if (this.#isPawnMovableN(pawn)) return true;
 
         //NE direction
-        if(this.#isPawnMovableNE(pawn)) return true;
+        if (this.#isPawnMovableNE(pawn)) return true;
 
         //E direction
-        if(this.#isPawnMovableE(pawn)) return true;
+        if (this.#isPawnMovableE(pawn)) return true;
 
         //SE direction
-        if(this.#isPawnMovableSE(pawn)) return true;
+        if (this.#isPawnMovableSE(pawn)) return true;
 
         //S direction
-        if(this.#isPawnMovableS(pawn)) return true;
+        if (this.#isPawnMovableS(pawn)) return true;
 
         //SW direction
-        if(this.#isPawnMovableSW(pawn)) return true;
+        if (this.#isPawnMovableSW(pawn)) return true;
 
         //W direction
-        if(this.#isPawnMovableW(pawn)) return true;
+        if (this.#isPawnMovableW(pawn)) return true;
 
         //NW direction
-        if(this.#isPawnMovableNW(pawn)) return true;
+        if (this.#isPawnMovableNW(pawn)) return true;
 
         return false
     }
