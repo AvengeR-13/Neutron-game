@@ -2,6 +2,7 @@ import {Pawn} from './Pawn.js'
 import {Game} from './Game.js'
 import {AI} from './AI.js'
 import {Minimax} from './Minimax.js'
+import {Negamax} from './Negamax.js'
 /**
  * Klasa odpowiedzialna za wszystkie operacje wykonywane na froncie
  */

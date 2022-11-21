@@ -1,13 +1,14 @@
 import {AI} from './AI.js';
 import {Pawn} from './Pawn.js';
 
-export class Minimax extends AI {
+export class Negamax extends AI {
+
 
     makeMove() {
         
         if (this.game.isNeutronMove) {
             try {
-                let bestMove = this.minimax(this.gameBoard, 2, true, null)
+                let bestMove = this.negamax(this.gameBoard, 2, 1, null)
                 console.log(bestMove)
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
                 let promise = new Promise((resolve, reject) => {
@@ -55,7 +56,7 @@ export class Minimax extends AI {
         return score
     }
 
-    minimax(gameBoard, depth, isMaximazing, beginningMove) {
+    negamax(gameBoard, depth, sign, beginningMove) {
         let testArray = []
         let scoreArray = []
         let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
@@ -63,69 +64,43 @@ export class Minimax extends AI {
         let NeutronMoves = this.getAvailableMoves(NeutronPawn, gameBoardCopy)
         let gameBoardValue = this.evaluate(gameBoardCopy)
         if (gameBoardValue >= 4000 || gameBoardValue <= -4000 ) {
-            return [gameBoardValue, beginningMove, "terminal node", depth]
+            return [sign*gameBoardValue, beginningMove, "terminal node", depth]
         } else if (depth === 0) {
-            return [gameBoardValue, beginningMove]
+            return [sign*gameBoardValue, beginningMove]
         }
         if (NeutronMoves.length === 0) {
-            return [(isMaximazing)? -Infinity: Infinity, beginningMove, "no moves for neutron", depth]
+            return [sign*Infinity, beginningMove, "no moves for neutron", depth]
         }
-        if(isMaximazing){
-            NeutronMoves.forEach(neutronDirection =>{
-                let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
-                let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoardCopy))
-                this.movePawn(neutronCopy, neutronDirection, gameBoardCopyForNeutron)
-                let playerPawns =this.findPlayerPawns(this.player, gameBoardCopyForNeutron)
-                let playerMovablePawns = this.findMovablePawns(playerPawns, gameBoardCopyForNeutron)
-                playerMovablePawns.forEach(pawn =>{
-                    let pawnAvailableMoves = this.getAvailableMoves(pawn, gameBoardCopyForNeutron)
-                    pawnAvailableMoves.forEach(pawnDirection =>{
-                        let gameBoardCopyForPawn = JSON.parse(JSON.stringify(gameBoardCopyForNeutron))
-                        let pawnCopy = JSON.parse(JSON.stringify(pawn))
-                        this.movePawn(pawnCopy, pawnDirection, gameBoardCopyForPawn )
-                        testArray.push(this.minimax(
-                            gameBoardCopyForPawn,
-                            depth - 1,
-                            (isMaximazing)? false: true,
-                            (depth === 2) ? {neutron: NeutronPawn,  neutronMove: neutronDirection, pawn: pawn, move: pawnDirection}: beginningMove
-                        ))
-                    })
+        NeutronMoves.forEach(neutronDirection =>{
+            let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
+            let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoardCopy))
+            this.movePawn(neutronCopy, neutronDirection, gameBoardCopyForNeutron)
+            let playerPawns = (sign <0 )? this.findPlayerPawns('White', gameBoardCopyForNeutron) : this.findPlayerPawns(this.player, gameBoardCopyForNeutron)
+            let playerMovablePawns = this.findMovablePawns(playerPawns, gameBoardCopyForNeutron)
+            playerMovablePawns.forEach(pawn =>{
+                let pawnAvailableMoves = this.getAvailableMoves(pawn, gameBoardCopyForNeutron)
+                pawnAvailableMoves.forEach(pawnDirection =>{
+                    let gameBoardCopyForPawn = JSON.parse(JSON.stringify(gameBoardCopyForNeutron))
+                    let pawnCopy = JSON.parse(JSON.stringify(pawn))
+                    this.movePawn(pawnCopy, pawnDirection, gameBoardCopyForPawn )
+                    let negamaxResult = this.negamax(
+                        gameBoardCopyForPawn,
+                        depth - 1,
+                        -sign,
+                        (depth === 2) ? {neutron: NeutronPawn,  neutronMove: neutronDirection, pawn: pawn, move: pawnDirection}: beginningMove
+                    )
+                    testArray.push([
+                        -negamaxResult[0],
+                        negamaxResult[1]
+                    ])
                 })
             })
-            testArray.forEach(element => {
-                scoreArray.push(element[0]);
-            });
-            if(depth == 2) console.log(scoreArray);
-            return testArray[scoreArray.indexOf(Math.max(...scoreArray))];
-        }else{
-            NeutronMoves.forEach(neutronDirection =>{
-                let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
-                let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoardCopy))
-                this.movePawn(neutronCopy, neutronDirection, gameBoardCopyForNeutron)
-                let playerPawns =this.findPlayerPawns('White', gameBoardCopyForNeutron)
-                let playerMovablePawns = this.findMovablePawns(playerPawns, gameBoardCopyForNeutron)
-                playerMovablePawns.forEach(pawn =>{
-                    let pawnAvailableMoves = this.getAvailableMoves(pawn, gameBoardCopyForNeutron)
-                    pawnAvailableMoves.forEach(pawnDirection =>{
-                        let gameBoardCopyForPawn = JSON.parse(JSON.stringify(gameBoardCopyForNeutron))
-                        let pawnCopy = JSON.parse(JSON.stringify(pawn))
-                        this.movePawn(pawnCopy, pawnDirection, gameBoardCopyForPawn )
-                        testArray.push(this.minimax(
-                            gameBoardCopyForPawn,
-                            depth - 1,
-                            (isMaximazing)? false: true,
-                            (depth === 2) ? {neutron: NeutronPawn,  neutronMove: neutronDirection, pawn: pawn, move: pawnDirection}: beginningMove
-                        ))
-                    })
-                })
-            })
-            testArray.forEach(element => {
-                scoreArray.push(element[0]);
-            });
-            if(depth == 2) console.log(scoreArray);
-            return testArray[scoreArray.indexOf(Math.min(...scoreArray))];
-        }
-        
+        })
+        testArray.forEach(element => {
+            scoreArray.push(element[0]);
+        });
+        if(depth == 2) console.log(scoreArray);
+        return testArray[scoreArray.indexOf(Math.max(...scoreArray))];
     }
 
     getAvailableMoves(pawn, gameBoard) {

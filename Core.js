@@ -2,6 +2,7 @@ import {AI} from '/src/AI.js'
 import {Pawn} from '/src/Pawn.js'
 import {Game} from '/src/Game.js'
 import {Minimax} from '/src/Minimax.js'
+import {Negamax} from './src/Negamax.js'
 import {GameBoard} from '/src/GameBoard.js'
 
 /**
