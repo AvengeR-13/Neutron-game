@@ -6,7 +6,7 @@
 <p>2. Choose the game mode and AI algorithm* you are interested in"</p>
 <p>3. Play!</p>
 
-*In PvE gam mode AI algorithm applies to black pawns only. White pawns always play randomly.
+*In PvE game mode AI algorithm applies to black pawns only. White pawns always play randomly.
 
 <h4>The AI using the algorithm wins 100/100 matches against the AI playing randomly.
 
