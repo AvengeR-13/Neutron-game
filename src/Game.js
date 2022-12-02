@@ -2,6 +2,7 @@ import {Pawn} from './Pawn.js'
 import {AI} from './AI.js'
 import {Minimax} from './Minimax.js'
 import {Negamax} from './Negamax.js'
+import { AlphaBeta } from './AlphaBeta.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
@@ -48,6 +49,9 @@ export class Game {
                 break
             case 'negamax':
                 AiInstance = new Negamax(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            case 'alphabeta':
+                AiInstance = new AlphaBeta(this.gameBoard, this, Game.playerEnums.BLACK)
                 break
             default:
                 console.log('Something went wrong in algorithm select. Selected: ' + algorithm)
@@ -129,7 +133,7 @@ export class Game {
 
         if (!this.#isPawnMovable(neutron)) {
             this.gameOver = true
-            return {win: true, winner: this.currentPlayer}
+            return {win: true, winner: (this.currentPlayer == "White")? "White" : "Black"}
         }
         if (neutron.y === 0) {
             this.gameOver = true
