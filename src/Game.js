@@ -110,16 +110,20 @@ export class Game {
                 ++this.rounds
             }
             if (this.currentPlayer instanceof AI) {
-                let promise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve(this.currentPlayer.makeMove())
+                if (this.isNeutronMove) {
+                    let promise = new Promise(async (resolve, reject) => {
+                        await resolve(this.currentPlayer.makeMove())
+                    }).then(() => {
+                        this.boardClass.toggleRound()
+                    }).catch(() => {
+                        console.log('Error')
+                    })
+                } else {
+                    setTimeout(async () => {
+                        this.boardClass.toggleRound()
+                        this.boardClass.showMoveButton()
                     }, 1000)
-                }).then(() => {
-                    this.boardClass.toggleRound()
-                    this.boardClass.updateBoard()
-                }).catch(() => {
-                    console.log('Error')
-                })
+                }
             }
         }
     }

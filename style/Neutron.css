@@ -29,8 +29,16 @@ li {
     font-size: 0;
 }
 
-.hidden {
-    display: none;
+.game-info {
+    align-content: center;
+    align-items: center;
+    display: table;
+    margin-left: 16rem;
+}
+
+.game-board {
+    margin-left: 9rem;
+    display: table;
 }
 
 .algorithm-select-label {
@@ -61,6 +69,10 @@ li {
     color: rgba(193, 193, 193, 0.76);
 }
 
+.game-window {
+    margin-left: 7rem !important;
+}
+
 .board-row {
     display: flex;
 }
@@ -84,6 +96,10 @@ li {
 
 #turn {
     margin: 10px 0;
+}
+
+.hidden {
+    display: none !important;
 }
 
 .btn-menu {

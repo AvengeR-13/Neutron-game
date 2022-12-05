@@ -1,29 +1,29 @@
 import {Negamax} from './Negamax.js';
 import {Pawn} from './Pawn.js';
+import {Graph} from './Graph.js';
 
 export class AlphaBeta extends Negamax{
+
+    graph = new Graph()
 
     makeMove() {
         if (this.game.isNeutronMove) {
             try {
-                let bestMove = this.alphaBetaMax(this.gameBoard, 4, 1, null, -4000, 4000)
-                console.log(bestMove)
+                let bestMove = this.alphaBetaMax(this.gameBoard, 2, 1, null, -5000, 5000)
+                this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
-                let promise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve(this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard))
-                    }, 500)
-                }).then(() => {
-                }).catch(() => {
-                    console.log('problem przy wykonaniu drugiego ruchu')
-                })
+                try {
+                   this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
+                } catch (e) {
+                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                }
                 return true
             } catch (e) {
                 console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
                 console.log("===========")
                 return false
             }
-        } 
+        }
     }
 
     alphaBetaMax(gameBoard, depth, sign, beginningMove, alpha, beta) {
@@ -33,14 +33,17 @@ export class AlphaBeta extends Negamax{
         let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
         let neutronMoves = this.getAvailableMoves(neutronPawn, gameBoardCopy)
         let gameBoardValue = this.evaluate(gameBoardCopy)
-        if (gameBoardValue >= 4000 || gameBoardValue <= -4000 ) {
-            return [sign*gameBoardValue, beginningMove, "terminal node", depth]
+        let children = []
+
+        if (gameBoardValue >= 5000 || gameBoardValue <= -5000 ) {
+            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }, depth]
         } else if (depth === 0) {
-            return [sign*gameBoardValue, beginningMove, "", depth]
+            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }, depth]
         }
         if (neutronMoves.length === 0) {
-            return [sign*4000, beginningMove, "no moves for neutron", depth]
+            return [sign*-5000, beginningMove, { name: sign*-5000 }, depth]
         }
+
         neutronMoves.forEach(neutronDirection =>{
             let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
             let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoard))
@@ -65,19 +68,20 @@ export class AlphaBeta extends Negamax{
                 gameBoardCopyForMove,
                 depth - 1,
                 -sign,
-                (depth === 4) ? {neutron: neutronPawn,  neutronMove: movesArray[i].neutronMove, pawn: movesArray[i].pawn, move: movesArray[i].move}: beginningMove,
+                (depth === 2) ? {neutron: neutronPawn,  neutronMove: movesArray[i].neutronMove, pawn: movesArray[i].pawn, move: movesArray[i].move}: beginningMove,
                 -beta,
                 -alpha
             )
             alphaBetaResult[0] *= -1
-            score = (Math.max(score[0],alphaBetaResult[0]) == alphaBetaResult[0])? alphaBetaResult: score
+            children.push(alphaBetaResult[2])
+            score = (Math.max(score[0],alphaBetaResult[0]) === alphaBetaResult[0])? alphaBetaResult: score
             alpha = Math.max(alpha, score[0])
             if(alpha > beta){
                 console.log("obciecie")
                 break
             }
         }
-        
+        score[2] = {name: depth === 2 ? score[0] : -score[0], children: children}
         return score
     }
 }

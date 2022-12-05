@@ -1,24 +1,23 @@
 import {AI} from './AI.js';
 import {Pawn} from './Pawn.js';
+import {Graph} from './Graph.js';
 
 export class Minimax extends AI {
 
-    makeMove() {
+    graph = new Graph()
+
+     makeMove() {
         if (this.game.isNeutronMove) {
             try {
                 let bestMove = this.minimax(this.gameBoard, 2, true, null)
-                console.log(bestMove)
+                this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
-                let promise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve(this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard))
-                    }, 500)
-                }).then(() => {
-                }).catch(() => {
-                    console.log('problem przy wykonaniu drugiego ruchu')
-                })
-                console.log(this.gameBoard)
-                return true
+                try {
+                    this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
+                    return true
+                } catch (e) {
+                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                }
             } catch (e) {
                 console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
                 return false
@@ -61,14 +60,17 @@ export class Minimax extends AI {
         let NeutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
         let NeutronMoves = this.getAvailableMoves(NeutronPawn, gameBoardCopy)
         let gameBoardValue = this.evaluate(gameBoardCopy)
+        let children = []
+
         if (gameBoardValue >= 4000 || gameBoardValue <= -4000 ) {
-            return [gameBoardValue, beginningMove, "terminal node", depth]
+            return [gameBoardValue, beginningMove, { name: gameBoardValue }, depth]
         } else if (depth === 0) {
-            return [gameBoardValue, beginningMove]
+            return [gameBoardValue, beginningMove, { name: gameBoardValue }]
         }
         if (NeutronMoves.length === 0) {
-            return [(isMaximazing)? -Infinity: Infinity, beginningMove, "no moves for neutron", depth]
+            return [(isMaximazing)? -Infinity: Infinity, beginningMove, { name: gameBoardValue }, depth]
         }
+
         if(isMaximazing){
             NeutronMoves.forEach(neutronDirection =>{
                 let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
@@ -92,10 +94,13 @@ export class Minimax extends AI {
                 })
             })
             testArray.forEach(element => {
-                scoreArray.push(element[0]);
+                scoreArray.push(element[0])
+                children.push(element[2])
             });
-            if(depth == 2) console.log(scoreArray);
-            return testArray[scoreArray.indexOf(Math.max(...scoreArray))];
+            if(depth === 2) console.log(scoreArray);
+            let index = scoreArray.indexOf(Math.max(...scoreArray))
+            testArray[index][2] = {name: testArray[index][0], children: children}
+            return testArray[index];
         }else{
             NeutronMoves.forEach(neutronDirection =>{
                 let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
@@ -119,10 +124,13 @@ export class Minimax extends AI {
                 })
             })
             testArray.forEach(element => {
-                scoreArray.push(element[0]);
+                scoreArray.push(element[0])
+                children.push(element[2])
             });
-            if(depth == 2) console.log(scoreArray);
-            return testArray[scoreArray.indexOf(Math.min(...scoreArray))];
+            if(depth === 2) console.log(scoreArray);
+            let index = scoreArray.indexOf(Math.min(...scoreArray))
+            testArray[index][2] = {name: testArray[index][0], children: children}
+            return testArray[index];
         }
 
     }
