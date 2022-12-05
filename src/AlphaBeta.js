@@ -1,9 +1,11 @@
 import {Negamax} from './Negamax.js';
 import {Pawn} from './Pawn.js';
 import {Graph} from './Graph.js';
+import {AI} from './AI.js';
 
 export class AlphaBeta extends Negamax{
 
+    algorithm = AI.algorithmEnums.ALPHABETA
     graph = new Graph()
 
     makeMove() {

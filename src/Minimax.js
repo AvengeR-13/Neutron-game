@@ -4,6 +4,7 @@ import {Graph} from './Graph.js';
 
 export class Minimax extends AI {
 
+    algorithm = AI.algorithmEnums.MINIMAX
     graph = new Graph()
 
      makeMove() {

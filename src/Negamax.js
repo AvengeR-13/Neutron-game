@@ -4,6 +4,7 @@ import {Graph} from './Graph.js';
 
 export class Negamax extends AI {
 
+    algorithm = AI.algorithmEnums.NEGAMAX
     graph = new Graph()
 
     makeMove() {

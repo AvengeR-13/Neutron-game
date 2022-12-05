@@ -12,16 +12,16 @@ export class Game {
     /**
      *Deklaracja fieldów klasy Game
      */
+    currentPlayer = 'White'
+    isNeutronMove = false
+    gameOver = false
+    rounds = 1
     gameBoard
     boardClass
     selectedPawn
-    currentPlayer = 'White'
-    isNeutronMove = false
     gameMode
     player1
     player2
-    gameOver = false
-    rounds = 1
 
     static gameModeEnums = {
         PVP: 'PvP',
@@ -109,23 +109,51 @@ export class Game {
                 this.currentPlayer = (this.currentPlayer === this.player1) ? this.player2 : this.player1
                 ++this.rounds
             }
-            if (this.currentPlayer instanceof AI) {
-                if (this.isNeutronMove) {
-                    let promise = new Promise(async (resolve, reject) => {
-                        await resolve(this.currentPlayer.makeMove())
-                    }).then(() => {
-                        this.boardClass.toggleRound()
-                    }).catch(() => {
-                        console.log('Error')
-                    })
-                } else {
-                    setTimeout(async () => {
-                        this.boardClass.toggleRound()
-                        this.boardClass.showMoveButton()
-                    }, 1000)
+            if (this.gameMode === Game.gameModeEnums.PVE) {
+                if (this.currentPlayer instanceof AI && this.currentPlayer.algorithm !== AI.algorithmEnums.RANDOM) {
+                    this.makeAIMoveStep()
+                } else if (this.currentPlayer instanceof AI) {
+                    this.makeNormalMove()
                 }
+            } else if (this.gameMode === Game.gameModeEnums.EVE) {
+                if (this.currentPlayer instanceof AI) {
+                    this.makeNormalMove()
+                }
+            } else {
+                console.log('PvP')
             }
         }
+    }
+
+    makeAIMoveStep() {
+        if (this.isNeutronMove) {
+            let promise = new Promise(async (resolve, reject) => {
+                await resolve(this.currentPlayer.makeMove())
+            }).then(() => {
+                this.boardClass.toggleRound()
+            }).catch(() => {
+                console.log('Error')
+            })
+        } else {
+            setTimeout(async () => {
+                this.boardClass.toggleRound()
+                this.boardClass.showMoveButton()
+            }, 1000)
+        }
+    }
+
+    makeNormalMove() {
+        let promise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(this.currentPlayer.makeMove())
+            }, 1000)
+        }).then(() => {
+            this.boardClass.toggleRound()
+            this.boardClass.updateBoard(this.gameBoard)
+        }).catch((e) => {
+            console.log('Error' + e)
+        })
+        console.log('Random')
     }
 
     clearPlace(x, y) {

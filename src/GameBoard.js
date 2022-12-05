@@ -39,10 +39,12 @@ export class GameBoard {
     constructor(gameMode, algorithm) {
         this.gameMode = gameMode
         this.game = new Game(this, this.gameMode, algorithm)
-        this.isMoveAllowed = true
+        if (this.gameMode !== Game.gameModeEnums.EVE) {
+            this.isMoveAllowed = true
+            document.querySelector('#move-btn').addEventListener('click', this.showMove.bind(this), false)
+        }
         this.#createBoard(this.board)
         this.#createPawns()
-        document.querySelector('#move-btn').addEventListener('click', this.showMove.bind(this), false)
 
         return this
     }
@@ -95,7 +97,6 @@ export class GameBoard {
 
     showMoveButton() {
         this.isMoveAllowed = false
-        console.log(this.isMoveAllowed, '1231')
         document.querySelector('#move-btn').classList.remove('hidden')
     }
 
@@ -103,7 +104,11 @@ export class GameBoard {
      * Przełączanie tury
      */
     toggleRound() {
+        this.#isWinningConditionMatched()
         this.game.swapPlayers()
+        console.log(this.game.currentPlayer instanceof AI)
+        this.isMoveAllowed = !(this.game.currentPlayer instanceof AI)
+        console.log(this.isMoveAllowed)
     }
 
     /**
@@ -201,8 +206,8 @@ export class GameBoard {
                     if (this.gameMode === Game.gameModeEnums.PVP) {
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
-                    } else if (this.gameMode === Game.gameModeEnums.PVE && (!(this.game.currentPlayer instanceof AI) && this.isMoveAllowed)) {
-                        console.log(true)
+                    } else if (this.gameMode === Game.gameModeEnums.PVE && !(this.game.currentPlayer instanceof AI)) {
+                        console.log(this.game.currentPlayer)
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
                     } else {
