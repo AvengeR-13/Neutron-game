@@ -1,7 +1,17 @@
+
 /**
  * Klasa sztucznej inteligencji, odpowiadająca za rozgrywanie tury przez komputer
  */
 export class AI {
+
+    static algorithmEnums = {
+        MINIMAX: 'Minimax',
+        NEGAMAX: 'Negamax',
+        ALPHABETA: 'Alphabeta',
+        RANDOM: 'Random'
+    }
+
+    algorithm = AI.algorithmEnums.RANDOM
 
     gameBoard
     player

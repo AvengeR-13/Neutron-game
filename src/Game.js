@@ -2,6 +2,7 @@ import {Pawn} from './Pawn.js'
 import {AI} from './AI.js'
 import {Minimax} from './Minimax.js'
 import {Negamax} from './Negamax.js'
+import { AlphaBeta } from './AlphaBeta.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
@@ -11,16 +12,16 @@ export class Game {
     /**
      *Deklaracja fieldów klasy Game
      */
+    currentPlayer = 'White'
+    isNeutronMove = false
+    gameOver = false
+    rounds = 1
     gameBoard
     boardClass
     selectedPawn
-    currentPlayer = 'White'
-    isNeutronMove = false
     gameMode
     player1
     player2
-    gameOver = false
-    rounds = 1
 
     static gameModeEnums = {
         PVP: 'PvP',
@@ -48,6 +49,9 @@ export class Game {
                 break
             case 'negamax':
                 AiInstance = new Negamax(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            case 'alphabeta':
+                AiInstance = new AlphaBeta(this.gameBoard, this, Game.playerEnums.BLACK)
                 break
             default:
                 console.log('Something went wrong in algorithm select. Selected: ' + algorithm)
@@ -105,19 +109,51 @@ export class Game {
                 this.currentPlayer = (this.currentPlayer === this.player1) ? this.player2 : this.player1
                 ++this.rounds
             }
-            if (this.currentPlayer instanceof AI) {
-                let promise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve(this.currentPlayer.makeMove())
-                    }, 1000)
-                }).then(() => {
-                    this.boardClass.toggleRound()
-                    this.boardClass.updateBoard()
-                }).catch(() => {
-                    console.log('Error')
-                })
+            if (this.gameMode === Game.gameModeEnums.PVE) {
+                if (this.currentPlayer instanceof AI && this.currentPlayer.algorithm !== AI.algorithmEnums.RANDOM) {
+                    this.makeAIMoveStep()
+                } else if (this.currentPlayer instanceof AI) {
+                    this.makeNormalMove()
+                }
+            } else if (this.gameMode === Game.gameModeEnums.EVE) {
+                if (this.currentPlayer instanceof AI) {
+                    this.makeNormalMove()
+                }
+            } else {
+                console.log('PvP')
             }
         }
+    }
+
+    makeAIMoveStep() {
+        if (this.isNeutronMove) {
+            let promise = new Promise(async (resolve, reject) => {
+                await resolve(this.currentPlayer.makeMove())
+            }).then(() => {
+                this.boardClass.toggleRound()
+            }).catch(() => {
+                console.log('Error')
+            })
+        } else {
+            setTimeout(async () => {
+                this.boardClass.toggleRound()
+                this.boardClass.showMoveButton()
+            }, 1000)
+        }
+    }
+
+    makeNormalMove() {
+        let promise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(this.currentPlayer.makeMove())
+            }, 1000)
+        }).then(() => {
+            this.boardClass.toggleRound()
+            this.boardClass.updateBoard(this.gameBoard)
+        }).catch((e) => {
+            console.log('Error' + e)
+        })
+        console.log('Random')
     }
 
     clearPlace(x, y) {
@@ -129,7 +165,7 @@ export class Game {
 
         if (!this.#isPawnMovable(neutron)) {
             this.gameOver = true
-            return {win: true, winner: this.currentPlayer}
+            return {win: true, winner: (this.currentPlayer == "White")? "White" : "Black"}
         }
         if (neutron.y === 0) {
             this.gameOver = true

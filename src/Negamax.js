@@ -1,15 +1,17 @@
 import {AI} from './AI.js';
 import {Pawn} from './Pawn.js';
+import {Graph} from './Graph.js';
 
 export class Negamax extends AI {
 
+    algorithm = AI.algorithmEnums.NEGAMAX
+    graph = new Graph()
 
     makeMove() {
-        
         if (this.game.isNeutronMove) {
             try {
                 let bestMove = this.negamax(this.gameBoard, 2, 1, null)
-                console.log(bestMove)
+                this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
                 let promise = new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -25,7 +27,7 @@ export class Negamax extends AI {
                 console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
                 return false
             }
-        } 
+        }
     }
 
     evaluate(gameBoard) {
@@ -63,13 +65,15 @@ export class Negamax extends AI {
         let NeutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
         let NeutronMoves = this.getAvailableMoves(NeutronPawn, gameBoardCopy)
         let gameBoardValue = this.evaluate(gameBoardCopy)
+        let children = []
+
         if (gameBoardValue >= 4000 || gameBoardValue <= -4000 ) {
-            return [sign*gameBoardValue, beginningMove, "terminal node", depth]
+            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }, depth]
         } else if (depth === 0) {
-            return [sign*gameBoardValue, beginningMove]
+            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }]
         }
         if (NeutronMoves.length === 0) {
-            return [sign*Infinity, beginningMove, "no moves for neutron", depth]
+            return [sign*-5000, beginningMove, { name: sign*-5000 }, depth]
         }
         NeutronMoves.forEach(neutronDirection =>{
             let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
@@ -93,14 +97,17 @@ export class Negamax extends AI {
                         -negamaxResult[0],
                         negamaxResult[1]
                     ])
+                    children.push(negamaxResult[2])
                 })
             })
         })
         testArray.forEach(element => {
             scoreArray.push(element[0]);
         });
-        if(depth == 2) console.log(scoreArray);
-        return testArray[scoreArray.indexOf(Math.max(...scoreArray))];
+        if(depth === 2) console.log(scoreArray);
+        let index = scoreArray.indexOf(Math.max(...scoreArray))
+        testArray[index][2] = {name: depth === 2 ? testArray[index][0] : -testArray[index][0], children: children}
+        return testArray[index];
     }
 
     getAvailableMoves(pawn, gameBoard) {

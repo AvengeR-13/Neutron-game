@@ -13,6 +13,7 @@ export class GameBoard {
      */
     gameMode
     game
+    isMoveAllowed
     board = [
         [
             new Pawn("W1","White",0,0),
@@ -38,7 +39,11 @@ export class GameBoard {
     constructor(gameMode, algorithm) {
         this.gameMode = gameMode
         this.game = new Game(this, this.gameMode, algorithm)
-        this.#createBoard()
+        if (this.gameMode !== Game.gameModeEnums.EVE) {
+            this.isMoveAllowed = true
+            document.querySelector('#move-btn').addEventListener('click', this.showMove.bind(this), false)
+        }
+        this.#createBoard(this.board)
         this.#createPawns()
 
         return this
@@ -63,6 +68,7 @@ export class GameBoard {
             this.#clearField(previousField)
             this.#setNewPawnLocation(field, pawn)
             this.toggleRound()
+            this.updateRoundsInfo()
         }
     };
 
@@ -77,23 +83,32 @@ export class GameBoard {
         field.addEventListener('click',this.#movePawn)
     }
 
+    showMove() {
+        this.hideMoveButton()
+        this.updateRoundsInfo()
+        this.updateBoard(this.board)
+        this.#isWinningConditionMatched()
+    }
+
+    hideMoveButton() {
+        document.querySelector('#move-btn').classList.add('hidden')
+        this.isMoveAllowed = true
+    }
+
+    showMoveButton() {
+        this.isMoveAllowed = false
+        document.querySelector('#move-btn').classList.remove('hidden')
+    }
+
     /**
      * Przełączanie tury
      */
     toggleRound() {
         this.#isWinningConditionMatched()
-
-        document.querySelector('#roundCount').innerText = `Round: ${this.game.rounds}`
         this.game.swapPlayers()
-
-        if (this.game.currentPlayer instanceof AI) {
-            document.querySelector('#turn').innerText = `${this.game.currentPlayer.player}'s turn`
-        } else {
-            document.querySelector('#turn').innerText = `${this.game.currentPlayer}'s turn`
-        }
-        this.game.isNeutronMove
-            ? document.querySelector('#isNeutron').style.visibility = 'visible'
-            : document.querySelector('#isNeutron').style.visibility = 'hidden'
+        console.log(this.game.currentPlayer instanceof AI)
+        this.isMoveAllowed = !(this.game.currentPlayer instanceof AI)
+        console.log(this.isMoveAllowed)
     }
 
     /**
@@ -171,12 +186,12 @@ export class GameBoard {
     /**
      *  Proceduralne tworzenie planszy na froncie
      */
-    #createBoard() {
+    #createBoard(board) {
         let boardElement = document.querySelector('#gameBoard')
         boardElement.classList.remove('hidden')
         document.querySelector('#gameInfo').classList.remove('hidden')
         let rowCount = 0
-        this.board.forEach(row => {
+        board.forEach(row => {
             let boardRow = document.createElement('ul')
             boardRow.classList.add('board-row')
             boardRow.setAttribute('id', `row${rowCount}`)
@@ -187,11 +202,12 @@ export class GameBoard {
                 boardField.classList.add('field')
                 boardField.setAttribute('id',`f${rowCount}0${fieldCount}`)
 
-                if (field instanceof Pawn) {
+                if (field !== null) {
                     if (this.gameMode === Game.gameModeEnums.PVP) {
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
                     } else if (this.gameMode === Game.gameModeEnums.PVE && !(this.game.currentPlayer instanceof AI)) {
+                        console.log(this.game.currentPlayer)
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
                     } else {
@@ -206,11 +222,23 @@ export class GameBoard {
         })
     }
 
-    updateBoard() {
-        this.#isWinningConditionMatched()
+    updateRoundsInfo() {
         document.querySelector('#roundCount').innerText = `Round: ${this.game.rounds}`
+        if (this.game.currentPlayer instanceof AI) {
+            document.querySelector('#turn').innerText = `${this.game.currentPlayer.player}'s turn`
+        } else {
+            document.querySelector('#turn').innerText = `${this.game.currentPlayer}'s turn`
+        }
+        this.game.isNeutronMove
+            ? document.querySelector('#isNeutron').style.visibility = 'visible'
+            : document.querySelector('#isNeutron').style.visibility = 'hidden'
+    }
+
+    updateBoard(board) {
+        this.#isWinningConditionMatched()
         document.querySelector('#gameBoard').innerHTML = ''
-        this.#createBoard()
+
+        this.#createBoard(board)
         this.#createPawns()
     }
 
@@ -227,12 +255,15 @@ export class GameBoard {
 
         this.#clearMoveSelection()
 
-        console.log(pawnAffiliation)
+        console.log(this.isMoveAllowed)
 
-        if (this.game.isNeutronMove) {
+        if (!this.isMoveAllowed) {
+            return
+        } else if (this.game.isNeutronMove) {
             if (pawnAffiliation !== 'Neutron') return
-        } else if (this.game.currentPlayer !== pawnAffiliation) return
-
+        } else if (this.game.currentPlayer !== pawnAffiliation) {
+            return
+        }
 
         field.style.backgroundColor = 'lightblue'
 
