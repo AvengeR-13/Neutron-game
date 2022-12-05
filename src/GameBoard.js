@@ -104,7 +104,7 @@ export class GameBoard {
      * Przełączanie tury
      */
     toggleRound() {
-        if (Game.gameModeEnums.PVE !== this.gameMode) {
+        if (!(this.game.currentPlayer instanceof AI)) {
             this.#isWinningConditionMatched()
         }
         this.game.swapPlayers()
