@@ -6,7 +6,7 @@ export class MonteCarlo extends AI {
 
     algorithm = AI.algorithmEnums.MINIMAX
     graph = new Graph()
-    numberOfSimulations = 20
+    numberOfSimulations = 200
 
     makeMove() {
         if (this.game.isNeutronMove) {       
@@ -42,7 +42,7 @@ export class MonteCarlo extends AI {
             let pawnCopy = JSON.parse(JSON.stringify(move.pawn))
             this.movePawn(neutronCopy, move.neutronMove, gameBoardCopyForMove)
             this.movePawn(pawnCopy, move.move, gameBoardCopyForMove)
-            let r =0
+            let r = 0
             for(let i=0; i<numberOfSimulations; ++i){
                 let childGameBoard = JSON.parse(JSON.stringify(gameBoardCopyForMove))
                 let currentPlayer = 'White'
