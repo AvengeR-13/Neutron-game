@@ -108,9 +108,7 @@ export class GameBoard {
             this.#isWinningConditionMatched()
         }
         this.game.swapPlayers()
-        console.log(this.game.currentPlayer instanceof AI)
         this.isMoveAllowed = !(this.game.currentPlayer instanceof AI)
-        console.log(this.isMoveAllowed)
     }
 
     /**
@@ -209,7 +207,6 @@ export class GameBoard {
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
                     } else if (this.gameMode === Game.gameModeEnums.PVE && !(this.game.currentPlayer instanceof AI)) {
-                        console.log(this.game.currentPlayer)
                         boardField.innerText = field.player
                         boardField.addEventListener('click', this.#showPossibleMovement, false)
                     } else {
@@ -256,8 +253,6 @@ export class GameBoard {
         const pawnAffiliation = field.innerText
 
         this.#clearMoveSelection()
-
-        console.log(this.isMoveAllowed)
 
         if (!this.isMoveAllowed) {
             return

@@ -79,7 +79,6 @@ export class AlphaBeta extends Negamax{
             score = (Math.max(score[0],alphaBetaResult[0]) === alphaBetaResult[0])? alphaBetaResult: score
             alpha = Math.max(alpha, score[0])
             if(alpha > beta){
-                console.log("obciecie")
                 break
             }
         }
