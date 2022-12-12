@@ -1,27 +1,25 @@
-import {AI} from './AI.js';
-import {Pawn} from './Pawn.js';
+import {AI} from "./AI.js";
+import {Pawn} from "./Pawn.js";
 import {Graph} from './Graph.js';
 
-export class Negamax extends AI {
+export class MonteCarlo extends AI {
 
-    algorithm = AI.algorithmEnums.NEGAMAX
+    algorithm = AI.algorithmEnums.MINIMAX
     graph = new Graph()
+    numberOfSimulations = 20
 
     makeMove() {
-        if (this.game.isNeutronMove) {
+        if (this.game.isNeutronMove) {       
             try {
-                let bestMove = this.negamax(this.gameBoard, 2, 1, null)
+                let bestMove = this.monteCarloSearch(this.gameBoard, this.numberOfSimulations)
                 this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
-                let promise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve(this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard))
-                    }, 500)
-                }).then(() => {
-                }).catch(() => {
-                    console.log('problem przy wykonaniu drugiego ruchu')
-                })
-                return true
+                try {
+                    this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
+                    return true
+                } catch (e) {
+                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                }
             } catch (e) {
                 console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
                 return false
@@ -29,86 +27,96 @@ export class Negamax extends AI {
         }
     }
 
-    evaluate(gameBoard) {
-        let score = 0
-        let Neutron = this.findPlayerPawns('Neutron', gameBoard)
-        if (Neutron[0].y === 4) {
-            score += 5000
-        } else if (Neutron[0].y === 0) {
-            score -= 5000
-        }else{
-            for (let i = 0; i < 5; i++) {
-                if (gameBoard[0][i] === null ) {
-                    score-= 20
+    monteCarloSearch(gameBoard, numberOfSimulations){
+        let childrenGraph = []
+        let movesArray = []
+        let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
+        let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
+        let bestMove = null
+        let bestProbability = -1
+        let bestGraph = null
+        movesArray = this.getAllAvailableMovesForPlayer(this.player, gameBoardCopy)
+        movesArray.forEach(move =>{
+            let gameBoardCopyForMove = JSON.parse(JSON.stringify(gameBoardCopy))
+            let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
+            let pawnCopy = JSON.parse(JSON.stringify(move.pawn))
+            this.movePawn(neutronCopy, move.neutronMove, gameBoardCopyForMove)
+            this.movePawn(pawnCopy, move.move, gameBoardCopyForMove)
+            let r =0
+            for(let i=0; i<numberOfSimulations; ++i){
+                let childGameBoard = JSON.parse(JSON.stringify(gameBoardCopyForMove))
+                let currentPlayer = 'White'
+                while(!this.isFinalState(childGameBoard)){
+                    let currentMovesArray = this.getAllAvailableMovesForPlayer(currentPlayer, childGameBoard)
+                    let randomNumber = this.randomIntFromInterval(0,currentMovesArray.length-1)
+                    let currentMove = currentMovesArray[randomNumber]
+                    this.movePawn(currentMove.neutron, currentMove.neutronMove, childGameBoard)
+                    this.movePawn(currentMove.pawn, currentMove.move, childGameBoard)
+                    currentPlayer = (currentPlayer == 'White')? 'Black': 'White'
                 }
-                if (gameBoard[4][i] === null) {
-                    score += 10
-                }
+                if(this.whoWon(childGameBoard,currentPlayer) == this.player) ++r
             }
-            for (let i = 0; i < 5; i++) {
-                if (gameBoard[0][i] === null ) {
-                    score-= 20
-                }
-                if (gameBoard[4][i] === null) {
-                    score += 10
-                }
+            let probability = r/numberOfSimulations
+            if(probability > bestProbability){
+                bestMove = move
+                bestProbability = probability
+                bestGraph = { name: `${r}/${numberOfSimulations}`}
             }
-        }
-        return score
+            childrenGraph.push({ name: `${r}/${numberOfSimulations}`})
+        })
+
+        return [bestProbability, bestMove, {name: bestGraph.name, children: childrenGraph}]
     }
 
-    negamax(gameBoard, depth, sign, beginningMove) {
-        let testArray = []
-        let scoreArray = []
-        let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
-        let NeutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
-        let NeutronMoves = this.getAvailableMoves(NeutronPawn, gameBoardCopy)
-        let gameBoardValue = this.evaluate(gameBoardCopy)
-        let children = []
+    randomIntFromInterval(min, max) { 
+        return Math.floor(Math.random() * (max - min + 1) + min)
+    }
 
-        if (gameBoardValue >= 4000 || gameBoardValue <= -4000 ) {
-            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }, depth]
-        } else if (depth === 0) {
-            return [sign*gameBoardValue, beginningMove, { name: sign*gameBoardValue }]
+    whoWon(gameBoard, player){
+        let neutronPawn = this.findPlayerPawns('Neutron', gameBoard)[0]
+        let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoard)
+        if(neutronPawn.y == 0) return 'White'
+        if(neutronPawn.y == 4) return 'Black'
+        if(neutronMoves.length == 0){
+            return (player == 'White')? 'Black': 'White'
         }
-        if (NeutronMoves.length === 0) {
-            return [sign*-5000, beginningMove, { name: sign*-5000 }, depth]
-        }
-        NeutronMoves.forEach(neutronDirection =>{
-            let neutronCopy = JSON.parse(JSON.stringify(NeutronPawn))
-            let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoardCopy))
+        return null
+
+    }
+    
+    isFinalState(gameBoard){
+        let neutronPawn = this.findPlayerPawns('Neutron', gameBoard)[0]
+        let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoard)
+        return (neutronMoves.length === 0 || neutronPawn.y == 4 || neutronPawn.y == 0)? true: false
+    }
+
+    getAllAvailableMovesForPlayer(player, gameBoard){
+        
+        let movesArray = []
+        let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
+        
+        let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
+        let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoardCopy)
+        
+        neutronMoves.forEach(neutronDirection =>{
+            let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
+            let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoard))
             this.movePawn(neutronCopy, neutronDirection, gameBoardCopyForNeutron)
-            let playerPawns = (sign <0 )? this.findPlayerPawns('White', gameBoardCopyForNeutron) : this.findPlayerPawns(this.player, gameBoardCopyForNeutron)
+            let playerPawns = this.findPlayerPawns(player, gameBoardCopyForNeutron)
             let playerMovablePawns = this.findMovablePawns(playerPawns, gameBoardCopyForNeutron)
             playerMovablePawns.forEach(pawn =>{
-                let pawnAvailableMoves = this.getAvailableMoves(pawn, gameBoardCopyForNeutron)
+                let pawnAvailableMoves = this.getPawnAvailableMoves(pawn, gameBoardCopyForNeutron)
                 pawnAvailableMoves.forEach(pawnDirection =>{
-                    let gameBoardCopyForPawn = JSON.parse(JSON.stringify(gameBoardCopyForNeutron))
-                    let pawnCopy = JSON.parse(JSON.stringify(pawn))
-                    this.movePawn(pawnCopy, pawnDirection, gameBoardCopyForPawn )
-                    let negamaxResult = this.negamax(
-                        gameBoardCopyForPawn,
-                        depth - 1,
-                        -sign,
-                        (depth === 2) ? {neutron: NeutronPawn,  neutronMove: neutronDirection, pawn: pawn, move: pawnDirection}: beginningMove
-                    )
-                    testArray.push([
-                        -negamaxResult[0],
-                        negamaxResult[1]
-                    ])
-                    children.push(negamaxResult[2])
+                    movesArray.push({neutron: neutronPawn,  neutronMove: neutronDirection, pawn: pawn, move: pawnDirection})
                 })
             })
         })
-        testArray.forEach(element => {
-            scoreArray.push(element[0]);
-        });
-        let index = scoreArray.indexOf(Math.max(...scoreArray))
-        testArray[index][2] = {name: depth === 2 ? testArray[index][0] : -testArray[index][0], children: children}
-        return testArray[index];
+        
+        return movesArray
     }
 
-    getAvailableMoves(pawn, gameBoard) {
+
+    getPawnAvailableMoves(pawn, gameBoard) {
         let availableMoves = [];
         if(this.isPawnMovableN(pawn, gameBoard)) availableMoves.push("N")
         if(this.isPawnMovableNE(pawn, gameBoard)) availableMoves.push("NE")

@@ -8,6 +8,7 @@ export class AI {
         MINIMAX: 'Minimax',
         NEGAMAX: 'Negamax',
         ALPHABETA: 'Alphabeta',
+        MONTECARLO: 'Montecarlo',
         RANDOM: 'Random'
     }
 
