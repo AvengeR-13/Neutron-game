@@ -7,6 +7,7 @@ export class MonteCarloTree extends AI {
     algorithm = AI.algorithmEnums.MONTECARLOTREE
     graph = new Graph()
     c = Math.sqrt(2)
+    seconds = 6
 
     makeMove() {
         if (this.game.isNeutronMove) {       
@@ -35,21 +36,20 @@ export class MonteCarloTree extends AI {
             visits: 0, 
             wins: 0 
         }
-        let current = root
         let startTime = Date.now();
-        while((Date.now() - startTime) < 5000){
-            current = this.treePolicy(current)
+        while((Date.now() - startTime) < (this.seconds*1000)){
+            let current = this.treePolicy(root)
             let reward = this.defaultPolicy(current)
             this.backup(current, reward)
         }
 
         console.log(root)
 
-        let maxprobablitiy = -Infinity
+        let maxVisits = -Infinity
         let bestChild = null
         root.children.forEach(child =>{
-            if(child.wins/child.visits > maxprobablitiy){
-                maxprobablitiy = child.wins/child.visits
+            if(child.visits > maxVisits){
+                maxVisits = child.visits
                 bestChild = child
             }
         })
@@ -100,13 +100,13 @@ export class MonteCarloTree extends AI {
         let value = -Infinity
         let best = null
         node.children.forEach(child => {
-            let childValue = (child.wins / child.visits) + (c * Math.sqrt(Math.log(node.visits)/child.visits))
+            let childValue = (child.wins / child.visits) + (this.c * Math.sqrt(Math.log(node.visits)/child.visits))
             if(childValue > value){
                 best = child
                 value = childValue
             }
         })
-        return child
+        return best
     }
 
     defaultPolicy(node){
@@ -121,7 +121,7 @@ export class MonteCarloTree extends AI {
             node.currentPlayer = (node.currentPlayer == 'White')? 'Black': 'White'
             node.possibleMoves = this.getAllAvailableMovesForPlayer(node.currentPlayer, node.gameBoard)
         }
-        let reward = (this.whoWon(node.gameBoard,node.currentPlayer) == this.player)? 1 : 0
+        let reward = (this.whoWon(node.gameBoard,node.currentPlayer) == this.player)? 1 : -1
         node.gameBoard = gameBoardCopy
         node.possibleMoves = possibleMovesCopy
         node.currentPlayer = currentPlayerCopy
