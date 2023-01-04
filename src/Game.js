@@ -4,6 +4,7 @@ import {Minimax} from './Minimax.js'
 import {Negamax} from './Negamax.js'
 import {AlphaBeta} from './AlphaBeta.js'
 import {MonteCarlo} from './MonteCarlo.js'
+import {MonteCarloTree} from './MonteCarloTree.js'
 
 /**
  * Klasa odpowiedzialna za "Core" gry — backend
@@ -56,6 +57,9 @@ export class Game {
                 break
             case 'montecarlo':
                 AiInstance = new MonteCarlo(this.gameBoard, this, Game.playerEnums.BLACK)
+                break
+            case 'montecarlotree':
+                AiInstance = new MonteCarloTree(this.gameBoard, this, Game.playerEnums.BLACK)
                 break
             default:
                 console.log('Something went wrong in algorithm select. Selected: ' + algorithm)

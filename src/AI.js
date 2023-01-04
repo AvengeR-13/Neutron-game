@@ -9,6 +9,7 @@ export class AI {
         NEGAMAX: 'Negamax',
         ALPHABETA: 'Alphabeta',
         MONTECARLO: 'Montecarlo',
+        MONTECARLOTREE: 'Montecarlotree',
         RANDOM: 'Random'
     }
 
