@@ -2,17 +2,17 @@ import {AI} from "./AI.js";
 import {Pawn} from "./Pawn.js";
 import {Graph} from './Graph.js';
 
-export class MonteCarlo extends AI {
+export class MonteCarloTree extends AI {
 
-    algorithm = AI.algorithmEnums.MONTECARLO
+    algorithm = AI.algorithmEnums.MONTECARLOTREE
     graph = new Graph()
-    numberOfSimulations = 200
+    c = Math.sqrt(2)
+    seconds = 6
 
     makeMove() {
         if (this.game.isNeutronMove) {       
-            try {
-                let bestMove = this.monteCarloSearch(this.gameBoard, this.numberOfSimulations)
-                this.graph.drawGraph(bestMove[2])
+                let bestMove = this.monteCarloTreeSearch(this.gameBoard, this.numberOfSimulations)
+                //this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
                 try {
                     this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
@@ -20,52 +20,120 @@ export class MonteCarlo extends AI {
                 } catch (e) {
                     console.log('problem przy wykonaniu drugiego ruchu' + e)
                 }
-            } catch (e) {
-                console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
-                return false
-            }
+
         }
     }
 
-    monteCarloSearch(gameBoard, numberOfSimulations){
-        let childrenGraph = []
-        let movesArray = []
-        let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
-        let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
-        let bestMove = null
-        let bestProbability = -1
-        let bestGraph = null
-        movesArray = this.getAllAvailableMovesForPlayer(this.player, gameBoardCopy)
-        movesArray.forEach(move =>{
-            let gameBoardCopyForMove = JSON.parse(JSON.stringify(gameBoardCopy))
-            let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
-            let pawnCopy = JSON.parse(JSON.stringify(move.pawn))
-            this.movePawn(neutronCopy, move.neutronMove, gameBoardCopyForMove)
-            this.movePawn(pawnCopy, move.move, gameBoardCopyForMove)
-            let r = 0
-            for(let i=0; i<numberOfSimulations; ++i){
-                let childGameBoard = JSON.parse(JSON.stringify(gameBoardCopyForMove))
-                let currentPlayer = 'White'
-                while(!this.isFinalState(childGameBoard)){
-                    let currentMovesArray = this.getAllAvailableMovesForPlayer(currentPlayer, childGameBoard)
-                    let randomNumber = this.randomIntFromInterval(0,currentMovesArray.length-1)
-                    let currentMove = currentMovesArray[randomNumber]
-                    this.movePawn(currentMove.neutron, currentMove.neutronMove, childGameBoard)
-                    this.movePawn(currentMove.pawn, currentMove.move, childGameBoard)
-                    currentPlayer = (currentPlayer == 'White')? 'Black': 'White'
-                }
-                if(this.whoWon(childGameBoard,currentPlayer) == this.player) ++r
-            }
-            let probability = r/numberOfSimulations
-            if(probability > bestProbability){
-                bestMove = move
-                bestProbability = probability
-                bestGraph = { name: `${r}/${numberOfSimulations}`}
-            }
-            childrenGraph.push({ name: `${r}/${numberOfSimulations}`})
-        })
+    monteCarloTreeSearch(gameBoard){
+        let movesArray = this.getAllAvailableMovesForPlayer(this.player, gameBoard)
+        let root = {
+            gameBoard: gameBoard,
+            parent: null,
+            children: [],
+            possibleMoves: movesArray,
+            move: null,
+            currentPlayer: this.player,
+            visits: 0, 
+            wins: 0 
+        }
+        let startTime = Date.now();
+        while((Date.now() - startTime) < (this.seconds*1000)){
+            let current = this.treePolicy(root)
+            let reward = this.defaultPolicy(current)
+            this.backup(current, reward)
+        }
 
-        return [bestProbability, bestMove, {name: bestGraph.name, children: childrenGraph}]
+        console.log(root)
+
+        let maxVisits = -Infinity
+        let bestChild = null
+        root.children.forEach(child =>{
+            if(child.visits > maxVisits){
+                maxVisits = child.visits
+                bestChild = child
+            }
+        })
+        let winingProbability = `${bestChild.wins}/${bestChild.visits}`
+        return [winingProbability, bestChild.move]
+    }
+
+    treePolicy(node){
+        while(!this.isFinalState(node.gameBoard)){
+            if(node.possibleMoves.length !=0){
+                return this.expand(node)
+            }else{
+                node = this.bestChild(node)
+            }
+        }
+        //to prevent from selecting branch with loosing option
+        if(this.whoWon(node.gameBoard, node.currentPlayer) != this.player){
+            node.wins = Number.MIN_SAFE_INTEGER
+        }
+        return node
+    }
+
+    expand(node){
+        let index = this.randomIntFromInterval(0,node.possibleMoves.length-1)
+        let move = node.possibleMoves[index]
+        let gameBoardCopy = JSON.parse(JSON.stringify(node.gameBoard))
+        let neutronCopy = JSON.parse(JSON.stringify(move.neutron))
+        let pawnCopy = JSON.parse(JSON.stringify(move.pawn))
+        this.movePawn(neutronCopy, move.neutronMove, gameBoardCopy)
+        this.movePawn(pawnCopy, move.move, gameBoardCopy)
+        let child = {
+            gameBoard: gameBoardCopy,
+            parent: node,
+            children: [],
+            possibleMoves: [],
+            move: move,
+            currentPlayer: (node.currentPlayer == this.player)? "White": this.player,
+            visits: 0, 
+            wins: 0 
+        }
+        child.possibleMoves = this.getAllAvailableMovesForPlayer(child.currentPlayer, child.gameBoard)
+        node.possibleMoves.splice(index,1)
+        node.children.push(child)
+        return child
+    }
+
+    bestChild(node){
+        let value = -Infinity
+        let best = null
+        node.children.forEach(child => {
+            let childValue = (child.wins / child.visits) + (this.c * Math.sqrt(Math.log(node.visits)/child.visits))
+            if(childValue > value){
+                best = child
+                value = childValue
+            }
+        })
+        return best
+    }
+
+    defaultPolicy(node){
+        let gameBoardCopy = JSON.parse(JSON.stringify(node.gameBoard))
+        let possibleMovesCopy = JSON.parse(JSON.stringify(node.possibleMoves))
+        let currentPlayerCopy = JSON.parse(JSON.stringify(node.currentPlayer))
+        while(!this.isFinalState(node.gameBoard)){
+            let randomNumber = this.randomIntFromInterval(0,node.possibleMoves.length-1)
+            let currentMove = node.possibleMoves[randomNumber]
+            this.movePawn(currentMove.neutron, currentMove.neutronMove, node.gameBoard)
+            this.movePawn(currentMove.pawn, currentMove.move, node.gameBoard)
+            node.currentPlayer = (node.currentPlayer == 'White')? 'Black': 'White'
+            node.possibleMoves = this.getAllAvailableMovesForPlayer(node.currentPlayer, node.gameBoard)
+        }
+        let reward = (this.whoWon(node.gameBoard,node.currentPlayer) == this.player)? 1 : -1
+        node.gameBoard = gameBoardCopy
+        node.possibleMoves = possibleMovesCopy
+        node.currentPlayer = currentPlayerCopy
+        return reward
+    }
+
+    backup(node, reward){
+        while(node != null){
+            node.visits +=1
+            node.wins += reward
+            node = node.parent
+        }
     }
 
     randomIntFromInterval(min, max) { 

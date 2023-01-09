@@ -5,6 +5,8 @@ import {Minimax} from '/src/Minimax.js'
 import {Negamax} from '/src/Negamax.js'
 import {AlphaBeta} from '/src/AlphaBeta.js'
 import {Graph} from '/src/Graph.js';
+import {MonteCarlo} from '/src/MonteCarlo.js'
+import {MonteCarloTree} from '/src/MonteCarloTree.js'
 import {GameBoard} from '/src/GameBoard.js'
 
 /**
