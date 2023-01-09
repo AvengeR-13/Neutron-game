@@ -17,12 +17,11 @@ export class AlphaBeta extends Negamax{
                 try {
                    this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
                 } catch (e) {
-                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                    console.log(`problem przy wykonaniu drugiego ruchu: ${e}`)
                 }
-                return true
             } catch (e) {
-                console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
-                console.log("===========")
+                console.log(`problem przy ruchu w makemove() ${e}`)
+                console.log(this.gameBoard)
                 return false
             }
         }

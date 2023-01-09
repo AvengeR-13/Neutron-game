@@ -18,12 +18,13 @@ export class Negamax extends AI {
                         resolve(this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard))
                     }, 500)
                 }).then(() => {
-                }).catch(() => {
-                    console.log('problem przy wykonaniu drugiego ruchu')
+                }).catch(e => {
+                    console.log(`problem przy wykonaniu drugiego ruchu: ${e}`)
                 })
                 return true
             } catch (e) {
-                console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
+                console.log(`problem przy ruchu w makemove() ${e}`)
+                console.log(this.gameBoard)
                 return false
             }
         }

@@ -9,7 +9,7 @@ export class MonteCarlo extends AI {
     numberOfSimulations = 200
 
     makeMove() {
-        if (this.game.isNeutronMove) {       
+        if (this.game.isNeutronMove) {
             try {
                 let bestMove = this.monteCarloSearch(this.gameBoard, this.numberOfSimulations)
                 this.graph.drawGraph(bestMove[2])
@@ -18,10 +18,11 @@ export class MonteCarlo extends AI {
                     this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
                     return true
                 } catch (e) {
-                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                    console.log(`problem przy wykonaniu drugiego ruchu: ${e}`)
                 }
             } catch (e) {
-                console.log("problem przy ruchu w makemove()" + e + this.gameBoard)
+                console.log(`problem przy ruchu w makemove() ${e}`)
+                console.log(this.gameBoard)
                 return false
             }
         }
@@ -68,7 +69,7 @@ export class MonteCarlo extends AI {
         return [bestProbability, bestMove, {name: bestGraph.name, children: childrenGraph}]
     }
 
-    randomIntFromInterval(min, max) { 
+    randomIntFromInterval(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min)
     }
 
@@ -83,7 +84,7 @@ export class MonteCarlo extends AI {
         return null
 
     }
-    
+
     isFinalState(gameBoard){
         let neutronPawn = this.findPlayerPawns('Neutron', gameBoard)[0]
         let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoard)
@@ -91,13 +92,13 @@ export class MonteCarlo extends AI {
     }
 
     getAllAvailableMovesForPlayer(player, gameBoard){
-        
+
         let movesArray = []
         let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
-        
+
         let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
         let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoardCopy)
-        
+
         neutronMoves.forEach(neutronDirection =>{
             let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
             let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoard))
@@ -111,7 +112,7 @@ export class MonteCarlo extends AI {
                 })
             })
         })
-        
+
         return movesArray
     }
 
