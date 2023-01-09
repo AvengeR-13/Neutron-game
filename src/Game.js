@@ -151,7 +151,7 @@ export class Game {
     }
 
     makeNormalMove() {
-        let promise = new Promise((resolve, reject) => {
+         new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve(this.currentPlayer.makeMove())
             }, 1000)
