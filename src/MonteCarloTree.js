@@ -10,17 +10,21 @@ export class MonteCarloTree extends AI {
     seconds = 6
 
     makeMove() {
-        if (this.game.isNeutronMove) {       
+        if (this.game.isNeutronMove) {
+            try {
                 let bestMove = this.monteCarloTreeSearch(this.gameBoard, this.numberOfSimulations)
-                //this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
                 try {
                     this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
                     return true
                 } catch (e) {
-                    console.log('problem przy wykonaniu drugiego ruchu' + e)
+                    console.log(`problem przy wykonaniu drugiego ruchu: ${e}`)
                 }
-
+            } catch (e) {
+                console.log(`problem przy ruchu w makemove() ${e}`)
+                console.log(this.gameBoard)
+                return false
+            }
         }
     }
 
@@ -33,8 +37,8 @@ export class MonteCarloTree extends AI {
             possibleMoves: movesArray,
             move: null,
             currentPlayer: this.player,
-            visits: 0, 
-            wins: 0 
+            visits: 0,
+            wins: 0
         }
         let startTime = Date.now();
         while((Date.now() - startTime) < (this.seconds*1000)){
@@ -87,8 +91,8 @@ export class MonteCarloTree extends AI {
             possibleMoves: [],
             move: move,
             currentPlayer: (node.currentPlayer == this.player)? "White": this.player,
-            visits: 0, 
-            wins: 0 
+            visits: 0,
+            wins: 0
         }
         child.possibleMoves = this.getAllAvailableMovesForPlayer(child.currentPlayer, child.gameBoard)
         node.possibleMoves.splice(index,1)
@@ -136,7 +140,7 @@ export class MonteCarloTree extends AI {
         }
     }
 
-    randomIntFromInterval(min, max) { 
+    randomIntFromInterval(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min)
     }
 
@@ -151,7 +155,7 @@ export class MonteCarloTree extends AI {
         return null
 
     }
-    
+
     isFinalState(gameBoard){
         let neutronPawn = this.findPlayerPawns('Neutron', gameBoard)[0]
         let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoard)
@@ -159,13 +163,13 @@ export class MonteCarloTree extends AI {
     }
 
     getAllAvailableMovesForPlayer(player, gameBoard){
-        
+
         let movesArray = []
         let gameBoardCopy = JSON.parse(JSON.stringify(gameBoard))
-        
+
         let neutronPawn = this.findPlayerPawns('Neutron', gameBoardCopy)[0]
         let neutronMoves = this.getPawnAvailableMoves(neutronPawn, gameBoardCopy)
-        
+
         neutronMoves.forEach(neutronDirection =>{
             let neutronCopy = JSON.parse(JSON.stringify(neutronPawn))
             let gameBoardCopyForNeutron = JSON.parse(JSON.stringify(gameBoard))
@@ -179,7 +183,7 @@ export class MonteCarloTree extends AI {
                 })
             })
         })
-        
+
         return movesArray
     }
 
