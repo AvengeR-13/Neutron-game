@@ -13,6 +13,7 @@ export class MonteCarloTree extends AI {
         if (this.game.isNeutronMove) {
             try {
                 let bestMove = this.monteCarloTreeSearch(this.gameBoard, this.numberOfSimulations)
+                this.graph.drawGraph(bestMove[2])
                 this.movePawn(bestMove[1].neutron, bestMove[1].neutronMove, this.gameBoard)
                 try {
                     this.movePawn(bestMove[1].pawn, bestMove[1].move, this.gameBoard)
@@ -46,9 +47,6 @@ export class MonteCarloTree extends AI {
             let reward = this.defaultPolicy(current)
             this.backup(current, reward)
         }
-
-        console.log(root)
-
         let maxVisits = -Infinity
         let bestChild = null
         root.children.forEach(child =>{
@@ -57,8 +55,12 @@ export class MonteCarloTree extends AI {
                 bestChild = child
             }
         })
-        let winingProbability = `${bestChild.wins}/${bestChild.visits}`
-        return [winingProbability, bestChild.move]
+        let childrenGraph = []
+        root.children.forEach((child)=>{
+            childrenGraph.push({name: `${(child.wins<0)? 0 : child.wins}/${child.visits}`})
+        })
+        let graph = {name: `${bestChild.wins}/${bestChild.visits}`, children: childrenGraph}
+        return [graph.name, bestChild.move, graph]
     }
 
     treePolicy(node){
